@@ -1,15 +1,35 @@
-import express, { Express, Request, Response } from 'express';
-import dotenv from 'dotenv';
+import { Server } from 'http';
+import app from './app';
+import config from './config';
 
-dotenv.config();
+async function bootstrap() {
+  const server: Server = app.listen(config.port, () => {
+    console.log(`Server running on port ${config.port}`);
+  });
 
-const app: Express = express();
-const port = process.env.PORT || 5000;
+  const exitHandler = () => {
+    if (server) {
+      server.close(() => {
+        console.log('Server closed');
+      });
+    }
+    process.exit(1);
+  };
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Express + TypeScript Server');
-});
+  const unexpectedErrorHandler = (error: unknown) => {
+    console.error(error);
+    exitHandler();
+  };
 
-app.listen(port, () => {
-  console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
-});
+  process.on('uncaughtException', unexpectedErrorHandler);
+  process.on('unhandledRejection', unexpectedErrorHandler);
+
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received');
+    if (server) {
+      server.close();
+    }
+  });
+}
+
+bootstrap();
