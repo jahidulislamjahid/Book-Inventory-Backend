@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from 'http-status';
-import ApiError from '../errors/ApiError';
+import ApiError from '../errors/apiError';
 
 export const asyncForEach = async (array: any[], callback: any) => {
   if (!Array.isArray(array)) {
