@@ -1,0 +1,138 @@
+import { Prisma, User } from '@prisma/client';
+import httpStatus from 'http-status';
+import ApiError from '../../../errors/apiError';
+import { paginationHelpers } from '../../../helpers/paginationHelpers';
+import { IGenericResponse } from '../../../interfaces/common';
+import { IPaginationOptions } from '../../../interfaces/pagination';
+import prisma from '../../../shared/prisma';
+import { UserSearchableFields } from './users.constant';
+import { IUserFilterRequest } from './users.interface';
+
+const getAllUsers = async (
+  filters: IUserFilterRequest,
+  options: IPaginationOptions
+): Promise<IGenericResponse<User[]>> => {
+  const { size, page, skip } = paginationHelpers.calculatePagination(options);
+  const { searchTerm, ...filtersData } = filters;
+
+  const andConditions = [];
+
+  if (searchTerm) {
+    andConditions.push({
+      OR: UserSearchableFields.map(field => ({
+        [field]: {
+          contains: searchTerm,
+          mode: 'insensitive',
+        },
+      })),
+    });
+  }
+
+  if (Object.keys(filtersData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filtersData).map(key => ({
+        [key]: {
+          equals: (filtersData as any)[key],
+        },
+      })),
+    });
+  }
+
+  const whereConditions: Prisma.UserWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
+  const result = await prisma.user.findMany({
+    where: whereConditions,
+    skip,
+    include: {
+      reviewAndRatings: true,
+      orders: true,
+    },
+    take: size,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? { [options.sortBy]: options.sortOrder }
+        : { id: 'desc' },
+  });
+
+  const total = await prisma.user.count();
+  return {
+    meta: {
+      total,
+      page,
+      size,
+    },
+    data: result,
+  };
+};
+
+const getUserById = async (id: string): Promise<User | null> => {
+  const result = await prisma.user.findUnique({
+    where: { id },
+    include: {
+      reviewAndRatings: true,
+      orders: true,
+    },
+  });
+
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User Doesn't Exists");
+  }
+
+  return result;
+};
+
+const updateUser = async (
+  id: string,
+  data: Partial<User>
+): Promise<User | null> => {
+  const isExists = await prisma.user.findUnique({
+    where: { id },
+  });
+
+  if (!isExists) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User Doesn't Exists");
+  }
+
+  const result = await prisma.user.update({
+    where: {
+      id,
+    },
+    data,
+    include: {
+      orders: true,
+      reviewAndRatings: true,
+    },
+  });
+
+  return result;
+};
+
+const deleteUser = async (id: string): Promise<User | null> => {
+  const isExists = await prisma.user.findUnique({
+    where: { id },
+  });
+
+  if (!isExists) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User Doesn't Exists");
+  }
+
+  const result = await prisma.user.delete({
+    where: {
+      id,
+    },
+    include: {
+      orders: true,
+      reviewAndRatings: true,
+    },
+  });
+
+  return result;
+};
+
+export const UserService = {
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+};
