@@ -2,7 +2,7 @@ import { Book } from '@prisma/client';
 import { Request, Response } from 'express';
 import httpStatus from 'http-status';
 import catchAsync from '../../../shared/catchAsync';
-import sendResponse from '../../../shared/sendResponse';
+import sendResponse from '../../../shared/sendresponse';
 import { BookService } from './book.service';
 
 const createBook = catchAsync(async (req: Request, res: Response) => {
