@@ -4,8 +4,8 @@ import httpStatus from 'http-status';
 import { paginationFields } from '../../../constants/pagination';
 import catchAsync from '../../../shared/catchAsync';
 import pick from '../../../shared/pick';
-import sendResponse from '../../../shared/sendResponse';
-import { UserFilterAbleFileds } from './users.constants';
+import sendResponse from '../../../shared/sendresponse';
+import { UserFilterAbleFileds } from './users.constant';
 import { UserService } from './users.service';
 
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
