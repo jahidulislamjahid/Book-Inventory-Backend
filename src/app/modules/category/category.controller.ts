@@ -34,7 +34,47 @@ const getAllCategories = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getCategoryById = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await CategoryService.getCategoryById(id);
+
+  sendResponse<Category>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Single Category Data Fetched Successfully',
+    data: result,
+  });
+});
+
+const updateCategory = catchAsync(async (req: Request, res: Response) => {
+  const data = req.body;
+  const id = req.params.id;
+  const result = await CategoryService.updateCategory(id, data);
+
+  sendResponse<Category>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Category Updated Successfully',
+    data: result,
+  });
+});
+
+const deleteCategory = catchAsync(async (req: Request, res: Response) => {
+  const id = req.params.id;
+  const result = await CategoryService.deleteCategory(id);
+
+  sendResponse<Category>(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Category Deleted Successfully',
+    data: result,
+  });
+});
+
 export const CategoryController = {
   createCategory,
   getAllCategories,
+  getCategoryById,
+  updateCategory,
+  deleteCategory,
 };

@@ -1,4 +1,6 @@
 import { Category, Prisma } from '@prisma/client';
+import httpStatus from 'http-status';
+import ApiError from '../../../errors/apiError';
 import { paginationHelpers } from '../../../helpers/paginationHelpers';
 import { IGenericResponse } from '../../../interfaces/common';
 import { IPaginationOptions } from '../../../interfaces/pagination';
@@ -71,7 +73,73 @@ const getAllCategories = async (
   };
 };
 
+const getCategoryById = async (id: string): Promise<Category | null> => {
+  const result = await prisma.category.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      books: true,
+    },
+  });
+
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Category Doesn't Exists");
+  }
+
+  return result;
+};
+
+const updateCategory = async (
+  id: string,
+  data: Partial<Category>
+): Promise<Category | null> => {
+  const isExists = await prisma.category.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!isExists) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Category Doesn't Exists");
+  }
+
+  const result = await prisma.category.update({
+    where: { id },
+    data,
+    include: {
+      books: true,
+    },
+  });
+
+  return result;
+};
+
+const deleteCategory = async (id: string): Promise<Category | null> => {
+  const isExists = await prisma.category.findUnique({
+    where: { id },
+  });
+
+  if (!isExists) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Category Doesn't Exists");
+  }
+
+  const result = await prisma.category.delete({
+    where: {
+      id,
+    },
+    include: {
+      books: true,
+    },
+  });
+
+  return result;
+};
+
 export const CategoryService = {
   createCategory,
   getAllCategories,
+  getCategoryById,
+  updateCategory,
+  deleteCategory,
 };
