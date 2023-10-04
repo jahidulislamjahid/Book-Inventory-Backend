@@ -2,7 +2,7 @@ import { UserRole } from '@prisma/client';
 import httpStatus from 'http-status';
 import ApiError from '../../../errors/apiError';
 import prisma from '../../../shared/prisma';
-import { ICreateOrderData } from './order.interface'
+import { ICreateOrderData } from './order.interface';
 
 const createOrder = async (
   id: string,
@@ -36,6 +36,89 @@ const createOrder = async (
   return result;
 };
 
+const getAllOrders = async (id: string, role: string) => {
+  let result;
+
+  if (role === UserRole.admin) {
+    result = await prisma.order.findMany({
+
+      include: {
+        user: true,
+        orderedBooks: {
+          include: {
+            book: true,
+          },
+        },
+      },
+    });
+    return result;
+  }
+
+  if (role === UserRole.customer) {
+    result = await prisma.order.findMany({
+
+      include: {
+        user: true,
+        orderedBooks: {
+          include: {
+            book: true,
+          },
+        },
+      },
+    });
+
+    return result;
+  }
+};
+
+const getSingleOrder = async (
+  userId: string,
+  role: string,
+  orderId: string
+) => {
+  let result;
+
+  if (role === UserRole.admin) {
+    result = await prisma.order.findUnique({
+      where: {
+        id: orderId,
+      },
+      include: {
+        user: true,
+        orderedBooks: {
+          include: {
+            book: true,
+          },
+        },
+      },
+    });
+    return result;
+  }
+
+  if (role === UserRole.customer) {
+    result = await prisma.order.findUnique({
+      where: {
+        id: orderId,
+        userId,
+      },
+      include: {
+        user: true,
+        orderedBooks: {
+          include: {
+            book: true,
+          },
+        },
+      },
+    });
+
+    if (!result) throw new ApiError(httpStatus.NOT_FOUND, 'Order not found!');
+
+    return result;
+  }
+};
+
 export const OrderService = {
   createOrder,
+  getAllOrders,
+  getSingleOrder,
 };
