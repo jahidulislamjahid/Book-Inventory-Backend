@@ -7,7 +7,7 @@ import { OrderValidation } from './order.validation';
 
 const router = express.Router();
 
-router.get('/', auth(UserRole.admin), OrderController.getAllOrders);
+router.get('/', auth(UserRole.admin, UserRole.customer), OrderController.getAllOrders);
 router.get(
   '/:orderId',
   auth(UserRole.admin, UserRole.customer),
